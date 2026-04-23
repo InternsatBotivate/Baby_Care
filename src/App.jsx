@@ -49,12 +49,15 @@ function App() {
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="patients" element={<AllPatients />} />
                 <Route path="active" element={<ActivePatients />} />
+                
+                {/* Unified Patient Command Center Routes */}
                 <Route path="details/:id" element={<CompleteDetails />} />
+                <Route path="records/:id" element={<CompleteDetails />} />
+                <Route path="growth/:id" element={<CompleteDetails />} />
+                <Route path="reports/:id" element={<CompleteDetails />} />
+                
                 <Route path="appointments" element={<Appointments isAdmin={true} />} />
                 <Route path="reminders" element={<Reminders />} />
-                <Route path="records/:id" element={<HealthRecords />} />
-                <Route path="growth/:id" element={<GrowthCare />} />
-                <Route path="reports/:id" element={<HealthRecords />} />
                 <Route path="guidelines" element={<Guidelines />} />
                 <Route path="emergency" element={<Emergency />} />
                 <Route path="lab" element={<Inventory type="Lab" />} />

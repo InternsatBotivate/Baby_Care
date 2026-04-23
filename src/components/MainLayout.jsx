@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { twMerge } from 'tailwind-merge';
+import Header from './Header';
 
 const SidebarItem = ({ icon: Icon, label, path, active, onClick }) => (
   <Link
@@ -61,22 +62,36 @@ const MainLayout = ({ children }) => {
     { icon: AlertCircle, label: 'Emergency', path: '/user/emergency' },
   ];
 
-  const navItems = user?.role === 'USER' ? userNav : adminNav;
+  // Dynamic path tracking for patient context
+  const getNavItems = () => {
+    const items = user?.role === 'USER' ? userNav : adminNav;
+    
+    // Extract patient ID from current URL if present
+    const patientMatch = location.pathname.match(/\/(details|records|growth|reports)\/(P\d+)/);
+    const selectedId = patientMatch ? patientMatch[2] : null;
+
+    return items.map(item => {
+      // If we have a selected patient, append their ID to relevant clinical routes
+      if (selectedId && (
+        item.path.includes('details') || 
+        item.path.includes('records') || 
+        item.path.includes('growth') || 
+        item.path.includes('reports')
+      )) {
+        // Ensure we don't double-append
+        const basePath = item.path.split('/P')[0];
+        return { ...item, path: `${basePath}/${selectedId}` };
+      }
+      return item;
+    });
+  };
+
+  const navItems = getNavItems();
 
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-900 font-sans">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-64 border-r border-slate-200 bg-white p-4 flex-col gap-1 fixed h-screen overflow-y-auto scrollbar-hide z-50 shadow-sm">
-        <div className="flex items-center gap-3 px-3 py-5 mb-4">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-            <Activity className="text-white" size={22} />
-          </div>
-          <div>
-            <h1 className="font-black text-xl tracking-tight text-slate-900 leading-tight">CarePlus</h1>
-            <p className="text-[10px] text-primary font-black uppercase tracking-widest leading-none mt-1">Newborn ERP</p>
-          </div>
-        </div>
-
+      <aside className="hidden lg:flex w-64 border-r border-slate-200 bg-white p-4 flex-col gap-1 fixed h-screen overflow-y-auto scrollbar-hide z-50 shadow-sm pt-4">
         <nav className="flex-1 flex flex-col gap-0.5">
           {navItems.map((item) => (
             <SidebarItem 
@@ -136,41 +151,26 @@ const MainLayout = ({ children }) => {
 
       {/* Main Content Area */}
       <main className="flex-1 lg:ml-64 flex flex-col min-h-screen">
-        {/* Top Header */}
-        <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-3 lg:px-8 lg:py-4 flex justify-between items-center shadow-sm">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-2 bg-slate-100 rounded-xl text-slate-600 shadow-sm border border-slate-200"
-            >
-              <Menu size={20} />
-            </button>
-            <div className="hidden lg:block">
-              <h2 className="text-[11px] text-slate-400 font-black uppercase tracking-widest leading-none mb-1">System Environment</h2>
-              <p className="text-[13px] font-bold text-slate-900 flex items-center gap-1.5">
-                <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div> Secure Clinical Node
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 lg:gap-6">
-             <div className="hidden md:flex flex-col text-right">
-                <p className="text-[14px] font-black text-slate-900 leading-tight">{user?.name || 'Guest User'}</p>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{user?.role || 'Visitor'}</p>
-             </div>
-             <button className="p-2 rounded-xl bg-slate-50 text-slate-400 hover:text-slate-900 relative border border-slate-100 shadow-sm transition-all">
-                <Bell size={20} />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-             </button>
-             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-blue-500 flex items-center justify-center font-black text-white text-sm shadow-md shadow-primary/20">
-               {user?.name?.[0].toUpperCase()}
-             </div>
-          </div>
-        </header>
+        <Header onMenuClick={() => setIsMobileMenuOpen(true)} />
         
         <div className="flex-1 p-4 lg:p-8 overflow-x-hidden">
           {children}
         </div>
+
+        {/* Footer */}
+        <footer className="px-4 py-6 lg:px-8 border-t border-slate-100 flex justify-center items-center bg-white/50 backdrop-blur-sm">
+          <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            Powered By 
+            <a 
+              href="https://www.botivate.in" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-primary hover:text-primary-dark transition-colors border-b border-primary/20 hover:border-primary pb-0.5"
+            >
+              Botivate
+            </a>
+          </p>
+        </footer>
       </main>
     </div>
   );

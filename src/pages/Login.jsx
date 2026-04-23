@@ -33,7 +33,7 @@ const Login = () => {
         </div>
 
         <div className="space-y-4">
-          <button 
+          <button
             onClick={() => handleLogin('SUPER_ADMIN')}
             disabled={loading}
             className="w-full p-4 rounded-2xl bg-white border border-slate-100 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center gap-4 group shadow-sm"
@@ -47,7 +47,7 @@ const Login = () => {
             </div>
           </button>
 
-          <button 
+          <button
             onClick={() => handleLogin('ADMIN')}
             disabled={loading}
             className="w-full p-4 rounded-2xl bg-white border border-slate-100 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center gap-4 group shadow-sm"
@@ -61,7 +61,7 @@ const Login = () => {
             </div>
           </button>
 
-          <button 
+          <button
             onClick={() => handleLogin('USER')}
             disabled={loading}
             className="w-full p-4 rounded-2xl bg-white border border-slate-100 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center gap-4 group shadow-sm"
