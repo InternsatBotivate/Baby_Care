@@ -74,9 +74,13 @@ function App() {
           <Route path="/user/*" element={
             <ProtectedRoute allowedRoles={['USER']}>
               <Routes>
+                {/* Unified Patient Portal Routes */}
                 <Route path="profile" element={<CompleteDetails />} />
+                <Route path="records" element={<CompleteDetails />} />
+                <Route path="growth" element={<CompleteDetails />} />
+                <Route path="reports" element={<CompleteDetails />} />
+                
                 <Route path="appointments" element={<Appointments isAdmin={false} />} />
-                <Route path="records" element={<HealthRecords />} />
                 <Route path="guidelines" element={<Guidelines />} />
                 <Route path="emergency" element={<Emergency />} />
                 <Route path="*" element={<Navigate to="profile" />} />

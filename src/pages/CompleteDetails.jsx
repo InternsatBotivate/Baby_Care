@@ -1,35 +1,54 @@
 import React from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { mockPatients, healthRecords, mockAppointments, labOrders } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
 import { 
   User, Calendar, ShieldCheck, Activity, FileText, 
   History, FlaskConical, Pill, Stethoscope, ChevronRight,
   TrendingUp, Download, Eye, AlertCircle, Baby, Heart,
-  Award, FileCheck, ClipboardList, Scale, MoreVertical
+  Award, FileCheck, ClipboardList, Scale
 } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 
 const CompleteDetails = () => {
   const { id } = useParams();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
-  const patient = mockPatients.find(p => p.id === id) || mockPatients.find(p => p.id === 'P003');
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  
+  // For USER role, they always see their own record. For ADMIN, we find by ID.
+  const patient = isAdmin 
+    ? (mockPatients.find(p => p.id === id) || mockPatients.find(p => p.id === 'P003'))
+    : mockPatients.find(p => p.id === 'P003'); // Mocking current user's baby
 
   const getActiveTab = () => {
-    if (location.pathname.includes('/records/')) return 'records';
-    if (location.pathname.includes('/growth/')) return 'growth';
-    if (location.pathname.includes('/reports/')) return 'reports';
+    if (location.pathname.includes('/records')) return 'records';
+    if (location.pathname.includes('/growth')) return 'growth';
+    if (location.pathname.includes('/reports')) return 'reports';
     return 'overview';
   };
 
   const activeTab = getActiveTab();
 
+  // Dynamically build paths based on role
+  const getPath = (tabId) => {
+    const base = isAdmin ? '/admin' : '/user';
+    const segment = {
+      overview: isAdmin ? `details/${id}` : 'profile',
+      records: isAdmin ? `records/${id}` : 'records',
+      growth: isAdmin ? `growth/${id}` : 'growth',
+      reports: isAdmin ? `reports/${id}` : 'reports',
+    }[tabId];
+    return `${base}/${segment}`;
+  };
+
   const tabs = [
-    { id: 'overview', label: 'Identity', icon: Baby, path: `/admin/details/${id}` },
-    { id: 'records', label: 'Records', icon: Award, path: `/admin/records/${id}` },
-    { id: 'growth', label: 'Growth', icon: TrendingUp, path: `/admin/growth/${id}` },
-    { id: 'reports', label: 'History', icon: ClipboardList, path: `/admin/reports/${id}` },
+    { id: 'overview', label: 'Identity', icon: Baby, path: getPath('overview') },
+    { id: 'records', label: 'Records', icon: Award, path: getPath('records') },
+    { id: 'growth', label: 'Growth', icon: TrendingUp, path: getPath('growth') },
+    { id: 'reports', label: 'History', icon: ClipboardList, path: getPath('reports') },
   ];
 
   return (
@@ -43,7 +62,9 @@ const CompleteDetails = () => {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-black text-slate-900 tracking-tight">{patient.name}</h1>
-              <span className="bg-primary/10 text-primary text-[8px] px-1.5 py-0.5 rounded-full font-black border border-primary/20 uppercase tracking-widest">Active</span>
+              <span className="bg-primary/10 text-primary text-[8px] px-1.5 py-0.5 rounded-full font-black border border-primary/20 uppercase tracking-widest">
+                {isAdmin ? 'Active' : 'Authenticated Profile'}
+              </span>
             </div>
             <div className="flex items-center gap-3 mt-1 text-slate-500 font-bold text-[12px]">
               <span className="flex items-center gap-1"><Baby size={12} className="text-primary" /> {patient.babyName || 'Baby'}</span>
@@ -55,15 +76,15 @@ const CompleteDetails = () => {
         </div>
         <div className="flex gap-2 w-full md:w-auto">
           <button className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-50 text-slate-600 rounded-lg font-bold text-[11px] border border-slate-100 uppercase tracking-wider">
-            <Download size={14} /> Export
+            <Download size={14} /> Export Dossier
           </button>
           <button className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-white rounded-lg font-bold text-[11px] uppercase tracking-wider shadow-lg shadow-primary/10">
-            <AlertCircle size={14} /> Emergency
+            <AlertCircle size={14} /> Support
           </button>
         </div>
       </div>
 
-      {/* Navigation Tabs - Mobile Scrollable */}
+      {/* Navigation Tabs */}
       <div className="flex overflow-x-auto scrollbar-hide gap-1 p-1 bg-slate-100/50 rounded-xl border border-slate-200 shadow-inner w-full">
         {tabs.map((tab) => (
           <button
@@ -104,16 +125,16 @@ const CompleteDetails = () => {
              <div className="glass-card p-5 md:p-6 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-lg font-black text-slate-900 leading-tight">Identity Details</h3>
-                  <p className="text-[12px] text-slate-500 font-bold mt-1">Full clinical verification of record.</p>
+                  <p className="text-[12px] text-slate-500 font-bold mt-1">Personal child identity record.</p>
                 </div>
                 <div className="grid grid-cols-2 gap-6 w-full md:w-auto md:flex md:gap-8">
                   <div>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Mother DOB</p>
-                    <p className="text-[13px] font-black text-slate-900">{patient.motherDOB}</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Mother Name</p>
+                    <p className="text-[13px] font-black text-slate-900">{patient.name}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Baby Age</p>
-                    <p className="text-[13px] font-black text-slate-900">1 Month</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Mother Age</p>
+                    <p className="text-[13px] font-black text-slate-900">{patient.motherAge} Years</p>
                   </div>
                 </div>
              </div>
@@ -142,38 +163,19 @@ const CompleteDetails = () => {
                  </div>
                ))}
              </div>
-             
-             {/* Records Table Replacement on Mobile */}
-             <div className="space-y-3 md:hidden">
-                {healthRecords.map((rec) => (
-                  <div key={rec.id} className="bg-white p-4 rounded-xl border border-slate-200 flex justify-between items-center shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
-                        <FileCheck size={16} />
+             <div className="glass-card rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+                <div className="p-4 bg-slate-50 border-b border-slate-100 font-black text-[10px] text-slate-400 uppercase tracking-widest">Child Health Dossier</div>
+                <div className="p-4 space-y-2">
+                   {healthRecords.map((rec) => (
+                      <div key={rec.id} className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-lg hover:border-primary/30 transition-all cursor-pointer">
+                        <div className="flex items-center gap-3">
+                           <FileCheck size={16} className="text-primary" />
+                           <p className="text-[13px] font-bold text-slate-900">{rec.title}</p>
+                        </div>
+                        <Download size={14} className="text-slate-300" />
                       </div>
-                      <div>
-                        <p className="text-[13px] font-black text-slate-900 leading-tight">{rec.title}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">{rec.date}</p>
-                      </div>
-                    </div>
-                    <button className="text-primary font-black text-[10px] uppercase tracking-widest px-3 py-1.5 bg-primary/5 rounded-lg">View</button>
-                  </div>
-                ))}
-             </div>
-
-             <div className="hidden md:block glass-card rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
-                <div className="p-4 bg-slate-50 border-b border-slate-100 font-black text-[10px] text-slate-400 uppercase tracking-widest">Digital Dossier Table</div>
-                <table className="w-full text-left">
-                  <tbody className="divide-y divide-slate-50 text-[13px]">
-                    {healthRecords.map((rec) => (
-                      <tr key={rec.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-5 py-3 font-bold text-slate-900">{rec.title}</td>
-                        <td className="px-5 py-3 text-slate-500">{rec.date}</td>
-                        <td className="px-5 py-3 text-right"><button className="text-primary font-black text-[10px] uppercase">Download</button></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                   ))}
+                </div>
              </div>
           </div>
         )}
@@ -203,48 +205,33 @@ const CompleteDetails = () => {
                   </div>
                 </div>
              </div>
-             <div className="glass-card p-10 rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-center text-center">
-                <p className="text-[13px] text-slate-400 font-bold">Growth Visualization Active • Syncing Data...</p>
+             <div className="glass-card p-10 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col items-center justify-center text-center">
+                <p className="text-[13px] text-slate-400 font-bold mb-4">World Health Organization (WHO) Growth Analytics</p>
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="w-3/4 h-full bg-primary animate-pulse"></div>
+                </div>
+                <p className="text-[10px] text-slate-400 font-bold mt-4 uppercase">Status: Optimal Development Track</p>
              </div>
           </div>
         )}
 
         {activeTab === 'reports' && (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-             {/* Lab History Replacement on Mobile */}
-             <div className="space-y-3">
-                <div className="p-1 bg-slate-100/50 rounded-lg border border-slate-200 flex items-center gap-2 px-3 py-2">
-                  <FlaskConical size={14} className="text-blue-500" />
-                  <span className="font-black text-[9px] text-slate-400 uppercase tracking-widest">Laboratory Archive</span>
-                </div>
-                {labOrders.map(lab => (
-                  <div key={lab.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded bg-blue-50/50 flex items-center justify-center text-blue-500 shadow-inner"><FileCheck size={16}/></div>
-                      <div>
-                        <p className="text-[13px] font-black text-slate-900 leading-tight">{lab.test}</p>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">{lab.date} • {lab.status}</p>
-                      </div>
-                    </div>
-                    <MoreVertical size={18} className="text-slate-300" />
-                  </div>
-                ))}
-             </div>
-             
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="glass-card p-5 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-between">
-                   <div>
-                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Appointment</p>
-                     <p className="text-[13px] font-black text-slate-900">Sarah Wilson</p>
-                   </div>
-                   <Calendar size={18} className="text-primary" />
-                </div>
-                <div className="glass-card p-5 rounded-xl border border-slate-200 bg-white shadow-sm flex items-center justify-between">
-                   <div>
-                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">ERP Node</p>
-                     <p className="text-[13px] font-black text-slate-900">Secure Sync</p>
-                   </div>
-                   <History size={18} className="text-slate-400" />
+             <div className="glass-card rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+                <div className="p-4 bg-slate-50 border-b border-slate-100 font-black text-[10px] text-slate-400 uppercase tracking-widest">Medical History & Logs</div>
+                <div className="p-4 space-y-3">
+                   {labOrders.map(lab => (
+                     <div key={lab.id} className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl">
+                       <div className="flex items-center gap-3">
+                         <div className="w-8 h-8 rounded bg-blue-50/50 flex items-center justify-center text-blue-500 shadow-inner"><FileCheck size={16}/></div>
+                         <div>
+                           <p className="text-[13px] font-black text-slate-900 leading-tight">{lab.test}</p>
+                           <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">{lab.date} • {lab.status}</p>
+                         </div>
+                       </div>
+                       <ChevronRight size={18} className="text-slate-300" />
+                     </div>
+                   ))}
                 </div>
              </div>
           </div>
